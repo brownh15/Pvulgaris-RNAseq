@@ -1,0 +1,106 @@
+#!/bin/bash --login
+########## Define Resources Needed with SBATCH Lines ##########
+ 
+#SBATCH --time=4:00:00             # limit of wall clock time - how long the job will run (same as -t)
+#SBATCH --ntasks=1                  # number of tasks - how many tasks (nodes) that you require (same as -n)
+#SBATCH --cpus-per-task=20           # number of CPUs (or cores) per task (same as -c)
+#SBATCH --mem=100G                    # memory required per node - amount of memory (in bytes)
+#SBATCH --job-name E64_star    # you can give your job a name for easier identification (same as -J)
+#SBATCH --ntasks-per-node=1
+ 
+########## Command Lines to Run ##########
+
+#Set this variable to the path to wherever you have conda installed
+conda="${HOME}/miniconda3"
+
+#Change to current directory
+cd ${PBS_O_WORKDIR}
+
+#Export paths to conda
+export PATH="${conda}/envs/STAR/bin:${PATH}"
+export LD_LIBRARY_PATH="${conda}/envs/STAR/lib:${LD_LIBRARY_PATH}"
+
+
+### Step 2: Alignment 1st Pass.
+
+STAR \
+	--genomeDir /mnt/gs21/scratch/brownh15/beanRNA/Pvulgaris/ref \
+	--readFilesIn E64_S18_L001_R1_001_trimmed.fastq.gz E64_S18_L001_R2_001_trimmed.fastq.gz \
+	--runThreadN 6 \
+	--outFilterMultimapScoreRange 1 \
+	--outFilterMultimapNmax 20 \
+	--outFilterMismatchNmax 10 \
+	--alignIntronMax 500000 \
+	--alignMatesGapMax 1000000 \
+	--sjdbScore 2 \
+	--alignSJDBoverhangMin 1 \
+	--genomeLoad NoSharedMemory \
+	--readFilesCommand zcat \
+	--outFilterMatchNminOverLread 0.33 \
+	--outFilterScoreMinOverLread 0.33 \
+	--sjdbOverhang 149 \
+	--outSAMstrandField intronMotif \
+	--outSAMtype None \
+	--outSAMmode None \
+
+
+### Step 4: Alignment 2nd Pass.
+
+STAR \
+	--genomeDir /mnt/gs21/scratch/brownh15/beanRNA/Pvulgaris/ref \
+	--readFilesIn E64_S18_L001_R1_001_trimmed.fastq.gz E64_S18_L001_R2_001_trimmed.fastq.gz \
+	--runThreadN 6 \
+	--outFilterMultimapScoreRange 1 \
+	--outFilterMultimapNmax 20 \
+	--outFilterMismatchNmax 10 \
+	--alignIntronMax 500000 \
+	--alignMatesGapMax 1000000 \
+	--sjdbScore 2 \
+	--alignSJDBoverhangMin 1 \
+	--genomeLoad NoSharedMemory \
+	--limitBAMsortRAM 0 \
+	--readFilesCommand zcat \
+	--outFilterMatchNminOverLread 0.33 \
+	--outFilterScoreMinOverLread 0.33 \
+	--sjdbOverhang 149 \
+	--outSAMstrandField intronMotif \
+	--outSAMattributes NH HI NM MD AS XS \
+	--outSAMunmapped Within \
+	--outSAMtype BAM SortedByCoordinate \
+	--outSAMheaderHD @HD VN:1.4 \
+	--quantMode GeneCounts
+cut -f1,4 ReadsPerGene.out.tab | sed '1,4d' > E64_counts.tsv 
+
+
+
+
+
+
+
+
+
+
+
+### Step 3: Intermediate Index Generation.
+
+STAR \
+	--runMode genomeGenerate \
+	--genomeDir /mnt/gs21/scratch/brownh15/beanRNA/Pvulgaris/ref \
+	--genomeFastaFiles /mnt/gs21/scratch/brownh15/beanRNA/Pvulgaris/ref/Pvulgaris-v2.0.fa \
+	--sjdbOverhang 100 \
+	--runThreadN 6 \
+	--sjdbFileChrStartEnd SJ.out.tab
+	--genomeSAindexNbases 13
+
+
+
+
+
+
+STAR \
+--genomeDir /mnt/gs21/scratch/brownh15/beanRNA/Pvulgaris/ref \
+--readFilesIn E12_S4_L001_R1_001_trimmed.fastq.gz E12_S4_L001_R2_001_trimmed.fastq.gz \
+--runThreadN 6 \
+--readFilesCommand zcat \	
+--outSAMtype BAM SortedByCoordinate \
+--quantMode GeneCounts

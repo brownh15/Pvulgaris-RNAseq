@@ -1,0 +1,30 @@
+#!/bin/bash --login
+########## Define Resources Needed with SBATCH Lines ##########
+ 
+#SBATCH --time=4:00:00             # limit of wall clock time - how long the job will run (same as -t)
+#SBATCH --ntasks=1                  # number of tasks - how many tasks (nodes) that you require (same as -n)
+#SBATCH --cpus-per-task=20           # number of CPUs (or cores) per task (same as -c)
+#SBATCH --mem=100G                    # memory required per node - amount of memory (in bytes)
+#SBATCH --job-name E64L 			   # you can give your job a name for easier identification (same as -J)
+#SBATCH --ntasks-per-node=1
+ 
+########## Command Lines to Run ##########
+
+#Set this variable to the path to wherever you have conda installed
+conda="${HOME}/miniconda3"
+
+#Change to current directory
+cd ${PBS_O_WORKDIR}
+
+#Export paths to conda
+export PATH="${conda}/envs/trimmomatic/bin:${PATH}"
+export LD_LIBRARY_PATH="${conda}/envs/trimmomatic/share/trimmomatic-0.39-2/adapters:${LD_LIBRARY_PATH}"
+
+
+trimmomatic PE -threads 4 E64L_S27_L004_R1_001.fastq.gz E64L_S27_L004_R2_001.fastq.gz \
+              E64L_S27_L004_R1_001_trimmed.fastq.gz E64L_S27_L004_R2_001_trimmed.fastq.gz \
+              E64L_S27_L004_R1_001_UP.fastq.gz E64L_S27_L004_R2_001_UP.fastq.gz \
+              ILLUMINACLIP:TruSeq2-PE.fa:2:30:10 SLIDINGWINDOW:4:20 MINLEN:36
+              
+              
+            

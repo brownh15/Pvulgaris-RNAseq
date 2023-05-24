@@ -1,0 +1,41 @@
+### Step 1: Building the STAR index.*
+
+#!/bin/bash --login
+########## Define Resources Needed with SBATCH Lines ##########
+ 
+#SBATCH --time=4:00:00             # limit of wall clock time - how long the job will run (same as -t)
+#SBATCH --ntasks=1                  # number of tasks - how many tasks (nodes) that you require (same as -n)
+#SBATCH --cpus-per-task=20           # number of CPUs (or cores) per task (same as -c)
+#SBATCH --mem=30G                    # memory required per node - amount of memory (in bytes)
+#SBATCH --job-name STAR_index      # you can give your job a name for easier identification (same as -J)
+#SBATCH --ntasks-per-node=1
+ 
+########## Command Lines to Run ##########
+
+#Set this variable to the path to wherever you have conda installed
+conda="${HOME}/miniconda3"
+
+#Change to current directory
+cd ${PBS_O_WORKDIR}
+
+#Export paths to conda
+export PATH="${conda}/envs/STAR/bin:${PATH}"
+export LD_LIBRARY_PATH="${conda}/envs/STAR/lib:${LD_LIBRARY_PATH}"
+
+
+STAR \
+--runMode genomeGenerate \
+--genomeDir Pvulgaris/ref/ \
+--genomeFastaFiles Pvulgaris/ref/Pvulgaris-v2.0.fa \
+--sjdbGTFfile Pvulgaris/ref/annotations/Pvulgaris-v2.1.gtf \
+--genomeSAindexNbases 13 \
+--sjdbOverhang 149 \
+--runThreadN 8
+
+
+
+
+
+
+
+--sjdbGTFfeatureExon
